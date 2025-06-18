@@ -18,22 +18,27 @@ public class MainController {
     public void start() {
 
         while (true) {
-            System.out.println("""
+            try {
+                System.out.println("""
                 1. Sign in
                 2. Sign up
                 0. Exit""");
-            int option = util.getInteger("Choose an option");
+                int option = util.getInteger("Choose an option");
 
-            switch (option) {
-                case 1 -> {
-                    loginPage();
+                switch (option) {
+                    case 1 -> {
+                        loginPage();
+                    }
+                    case 2 -> {
+                        registerPage();
+                    }
+                    case 0 -> {
+                        return;
+                    }
                 }
-                case 2 -> {
-                    registerPage();
-                }
-                case 0 -> {
-                    return;
-                }
+            }catch (RuntimeException e) {
+                System.out.println(e.getMessage());
+                return;
             }
         }
 
@@ -42,42 +47,54 @@ public class MainController {
     private void registerPage() {
         System.out.println("Create your account here!");
 
-        String userName = util.getText("Enter your username");
-        String password = util.getText("Enter your password");
+        try {
+            String userName = util.getText("Enter your username");
+            String password = util.getText("Enter your password");
 
-        if (mainService.createAccount(userName, password)) {
-            System.out.println("Your successfully achievements start here!");
+            if (mainService.createAccount(userName, password)) {
+                System.out.println("Your successfully achievements start here!");
 
-            UserPage();
-
+                UserPage();
+            }
+        }catch (RuntimeException e) {
+            System.out.println(e.getMessage());
         }
     }
 
     private void loginPage() {
         System.out.println("Log in to your account");
 
-        String userName = util.getText("Enter username");
-        String password = util.getText("Enter password");
+        try {
+            String userName = util.getText("Enter username");
+            String password = util.getText("Enter password");
 
-        String role = mainService.loginToAccount(userName, password);
+            String role = mainService.loginToAccount(userName, password);
 
-        if (role != null) {
-            if (role.equals(UserRole.ADMIN.toString())) {
-                AdminPage();
-            }
-            else if (role.equals(UserRole.USER.toString())) {
-                UserPage();
+            if (role != null) {
+                if (role.equals(UserRole.ADMIN.toString())) {
+                    AdminPage();
+                }
+
+                if (role.equals(UserRole.USER.toString())) {
+                    UserPage();
+                }
             }else {
                 System.out.println("Invalid password or username");
             }
-        }
 
+        }catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /* Admin Page */
     private void AdminPage() {
         while (true) {
-            System.out.println("Welcome to Admin Page");
+            System.out.print("""
+                    ******************************************
+                            Welcome to Admin Page
+                    ******************************************
+                    """);
             System.out.print("""
                     1. Show all users
                     2. Block user
@@ -123,86 +140,111 @@ public class MainController {
     }
 
     private void showAllUsers() {
-        System.out.println("User lists");
 
-        ArrayList <User> userData = mainService.showUserList();
+        ArrayList<User> userData = mainService.showUserList();
 
-        for (User data : userData) {
-            if (data.getId() != 0) {
+        if (mainService.showUserList().isEmpty()) {
+            System.out.print("""
+                    -------------------
+                    User doesn't exists
+                    -------------------
+                    """);
+        }else {
+            System.out.println("User lists");
+
+            for (User data : userData) {
                 System.out.println(data);
             }
         }
-
     }
 
     private void blockUser() {
         ArrayList <User> userData = mainService.showUserList();
 
-        int counter = 0;
+        if (mainService.showUserList().isEmpty()) {
+            System.out.print("""
+                    -------------------
+                    User doesn't exists
+                    -------------------
+                    """);
+        }else {
+            System.out.println("Active users");
 
-        for (User user: userData) {
-            if (user.getStatus().equals(Status.ACTIVE)) {
-                counter++;
+            System.out.println("Which one user would you like to block");
+
+            for (User user: userData) {
+                if (user.getStatus().equals(Status.ACTIVE) && user.getId() != 0 ) {
+                    System.out.println(user);
+                }
             }
-        }
 
-        if (counter == 0) return;
+            int userId = util.getInteger("Choose user id");
 
-        System.out.println("Active users");
-
-        System.out.println("Which one user would you like to block");
-
-        for (User user: userData) {
-            if (user.getStatus().equals(Status.ACTIVE) && user.getId() != 0 ) {
-                System.out.println(user);
+            if (!mainService.checkedUser(userId)) {
+                System.out.println("User not found");
+                return;
             }
+
+            mainService.blockUser(userId);
         }
-
-        int userId = util.getInteger("Choose user id");
-
-        if (!mainService.checkedUser(userId)) {
-            System.out.println("User not found");
-            return;
-        }
-
-        mainService.blockUser(userId);
     }
 
     private void activateUser() {
         ArrayList <User> userData = mainService.showUserList();
 
-        int counter = 0;
+        if (mainService.showUserList().isEmpty()) {
+            System.out.print("""
+                    -------------------
+                    User doesn't exists
+                    -------------------
+                    """);
+        }else {
+            System.out.println("Blocked users");
 
-        for (User user: userData) {
-            if (user.getStatus().equals(Status.BLOCK)) {
-                counter++;
+            int counter = 0;
+
+            for (User user: userData) {
+                if (user.getStatus().equals(Status.BLOCK)) {
+                    counter++;
+                }
             }
-        }
 
-        if (counter == 0) return;
-
-        System.out.println("Blocked users");
-        System.out.println("Which one user would you like to active");
-
-        for (User user: userData) {
-            if (user.getStatus().equals(Status.BLOCK) && user.getId() != 0) {
-                System.out.println(user);
+            if (counter == 0) {
+                System.out.print("""
+                        --------------
+                        User not found
+                        --------------
+                        """);
+                return;
             }
-        }
 
-        int userId = util.getInteger("Choose user id");
-        if (!mainService.checkedUser(userId)) {
-            System.out.println("User not found");
-            return;
-        }
+            System.out.println("Which one user would you like to active");
 
-        mainService.activateUser(userId);
+            for (User user: userData) {
+                if (user.getStatus().equals(Status.BLOCK) && user.getId() != 0) {
+                    System.out.println(user);
+                }
+            }
+
+            int userId = util.getInteger("Choose user id");
+
+            mainService.activateUser(userId);
+        }
     }
 
     private void removeUser() {
         System.out.println("Delete user");
-        System.out.println("Which one user would you like to remove");
 
+        if (mainService.showUserList().isEmpty()) {
+            System.out.print("""
+                    -------------------
+                    User doesn't exists
+                    -------------------
+                    """);
+            return;
+        }
+
+        System.out.println("Which one user would you like to remove");
         showAllUsers();
 
         int userId = util.getInteger("Choose user id");
@@ -220,7 +262,14 @@ public class MainController {
 
         String currentPass = util.getText("Enter current password");
 
-        if (!mainService.checkPassword(currentPass)) return;
+        if (!mainService.checkPassword(currentPass)) {
+            System.out.print("""
+                    ----------------------------
+                    ❌ Enter current password!!!
+                    ----------------------------
+                   """);
+            return;
+        }
 
         String newPassword = util.getText("Enter new password");
 
@@ -231,7 +280,12 @@ public class MainController {
 
     private void UserPage() {
         while (true) {
-            System.out.println("Welcome to User Page");
+            System.out.println("""
+                    ******************************************
+                            Welcome to User Page
+                    ******************************************
+                    """);
+
             System.out.print("""
                     1. Create post
                     2. Show posts
@@ -260,7 +314,6 @@ public class MainController {
 
                 default -> {
                     System.out.println("Invalid element entered");
-                    return;
                 }
             }
         }
@@ -277,23 +330,35 @@ public class MainController {
         String title = util.getText("Enter title");
         String content = util.getText("Enter content");
 
-        ArrayList<Post> data = mainService.createPost(title, content);
+        try {
+            ArrayList<Post> data = mainService.createPost(title, content);
 
-        for (Post post: data) {
-            if (post != null) {
-                System.out.println(post);
+            for (Post post: data) {
+                if (post != null) {
+                    System.out.println(post);
+                }
             }
-        }
 
+        }catch (RuntimeException e) {
+            System.out.println("------------------------------------------");
+            System.out.println(e.getMessage());
+            System.out.println("------------------------------------------");
+        }
     }
 
     private void showPosts() {
+        if (mainService.showPosts().isEmpty()) {
+            System.out.println("----------------");
+            System.out.println("Nothing to show!");
+            System.out.println("----------------");
+            return;
+        }
+
         System.out.println("Posts list");
 
         for (Post post: mainService.showPosts()) {
             System.out.println(post);
         }
-
     }
 
     private void changeUserPassword() {
@@ -301,11 +366,13 @@ public class MainController {
 
         String currentPass = util.getText("Enter current password");
 
-        if (!mainService.checkPassword(currentPass)) return;
+        if (!mainService.checkPassword(currentPass)) {
+            System.out.println("❌ Enter current password!");
+            return;
+        }
 
         String newPassword = util.getText("Enter new password");
 
         mainService.changePassword(currentPass, newPassword);
     }
-
 }

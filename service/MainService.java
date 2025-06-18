@@ -14,10 +14,15 @@ public class MainService {
     public boolean createAccount(String userName, String password) {
 
         for (User user: dataBase.getUserList()) {
-            if (user.getUsername().equals(userName)) {
-                return false;
+            if (userName.length() < 5 || password.length() < 8 ) {
+                throw new RuntimeException("❌ Username length must be more than 5, password length at least 8");
+            }
+
+            if (user.getUsername().equals(userName) ) {
+                throw new RuntimeException("This username already exists!");
             }
         }
+
 
         int newUserId = dataBase.getUserId();
         User newUser = new User(newUserId, userName, password, UserRole.USER, Status.ACTIVE);
@@ -30,9 +35,15 @@ public class MainService {
         return true;
     }
 
-    public String loginToAccount(String username, String password) {
+    public String loginToAccount(String userName, String password) {
         for (User user: dataBase.getUserList()) {
-            if (user.getUsername().equals(username) && user.getPassword().equals(password)) {
+            if (!user.getUsername().equals("admin") && !user.getPassword().equals("admin")) {
+                if (userName.length() < 5 || password.length() < 8) {
+                    throw new RuntimeException("❌ Username length must be more than 5, password length at least 8");
+                }
+            }
+
+            if (user.getUsername().equals(userName) && user.getPassword().equals(password)) {
                 dataBase.setCurrentUser(user);
                 return user.getRole().toString();
             }
@@ -42,7 +53,15 @@ public class MainService {
     }
 
     public ArrayList<User> showUserList() {
-        return dataBase.getUserList();
+        ArrayList<User> result = new ArrayList<>();
+
+        for (User user: dataBase.getUserList()) {
+            if (user.getId() != 0) {
+                result.add(user);
+            }
+        }
+
+        return result;
     }
 
     public boolean checkedUser(int userId) {
@@ -57,7 +76,7 @@ public class MainService {
 
     public void blockUser(int userId) {
         for (User user: dataBase.getUserList()) {
-            if (user.getId() == userId) {
+            if (user.getId() == userId && user.getStatus().equals(Status.ACTIVE) ) {
                 user.setStatus(Status.BLOCK);
                 return;
             }
@@ -105,6 +124,10 @@ public class MainService {
         Post post = new Post(dataBase.getPostId(), title, content, dataBase.getUserId());
         User currentUser = dataBase.getCurrentUser();
         ArrayList<User> userList = dataBase.getUserList();
+
+        if (title.isEmpty() || content.isEmpty()) {
+            throw new RuntimeException("Title or content fields are empty!");
+        }
 
         for (User user: userList) {
             if (user.getStatus().equals(Status.BLOCK)) {

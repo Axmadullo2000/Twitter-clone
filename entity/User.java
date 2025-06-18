@@ -11,14 +11,6 @@ public class User extends UserPost {
     private UserRole role;
     private Status status;
 
-    public User(Integer userId, Integer postId, Integer id, String username, String password, UserRole role, Status status) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.role = role;
-        this.status = status;
-    }
-
     public User(int id, String username, String password, UserRole role, Status status) {
         this.id = id;
         this.username = username;
@@ -71,11 +63,12 @@ public class User extends UserPost {
 
     @Override
     public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", role=" + role +
-                ", status=" + status +
+        return "User { " +
+                "id = " + id +
+                ", username = '" + username + '\'' +
+                ", password = '" + password + '\'' +
+                ", role = " + role +
+                ", status = " + status +
                 '}';
     }
 }

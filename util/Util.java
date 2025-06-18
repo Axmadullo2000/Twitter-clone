@@ -9,17 +9,21 @@ public class Util {
     Scanner strScanner = new Scanner(System.in);
 
     public int getInteger(String text) {
-        try {
+        while (true) {
             System.out.printf("%s: ", text);
-            return intScanner.nextInt();
-        }catch (IllegalArgumentException | InputMismatchException e) {
-            System.out.println(e.getMessage());
+            String input = intScanner.nextLine();
+
+            try {
+                return Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Please enter a valid number!");
+            }
         }
-        return 0;
     }
 
     public String getText(String text) {
         System.out.printf("%s: ", text);
         return strScanner.nextLine();
     }
+
 }
