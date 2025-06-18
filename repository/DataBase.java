@@ -9,10 +9,6 @@ import enums.UserRole;
 import java.util.ArrayList;
 
 public class DataBase {
-
-    private int userId = 1;
-    private int postId = 1;
-
     private User currentUser;
 
     private ArrayList<User> userList = new ArrayList<>();
@@ -21,22 +17,6 @@ public class DataBase {
 
     public void setCurrentUser(User currentUser) {
         this.currentUser = currentUser;
-    }
-
-    public int getPostId() {
-        return postId;
-    }
-
-    public void setPostId(int postId) {
-        this.postId = postId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
-    public int getUserId() {
-        return userId;
     }
 
     public ArrayList<User> getUserList() {
@@ -51,13 +31,12 @@ public class DataBase {
         return userPostList;
     }
 
-
     public User getCurrentUser() {
         return currentUser;
     }
 
     {
-        User admin = new User(0,"admin", "admin", UserRole.ADMIN, Status.ACTIVE );
+        User admin = new User(0,"admin", "admin", UserRole.ADMIN, Status.ACTIVE, 0, 0 );
         userList.add(admin);
     }
 

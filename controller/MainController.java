@@ -333,12 +333,13 @@ public class MainController {
         try {
             ArrayList<Post> data = mainService.createPost(title, content);
 
+            System.out.println("------------------------------------------");
+
             for (Post post: data) {
                 if (post != null) {
                     System.out.println(post);
                 }
             }
-
         }catch (RuntimeException e) {
             System.out.println("------------------------------------------");
             System.out.println(e.getMessage());
@@ -355,6 +356,8 @@ public class MainController {
         }
 
         System.out.println("Posts list");
+
+        System.out.println("------------------------------------------");
 
         for (Post post: mainService.showPosts()) {
             System.out.println(post);

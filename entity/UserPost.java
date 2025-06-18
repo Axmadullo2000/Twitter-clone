@@ -9,6 +9,11 @@ public class UserPost {
         return userId;
     }
 
+    public UserPost(Integer userId, Integer postId) {
+        this.userId = userId;
+        this.postId = postId;
+    }
+
     public void setUserId(Integer userId) {
         this.userId = userId;
     }

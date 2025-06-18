@@ -1,11 +1,12 @@
 package entity;
 
+import util.IdGenerator;
+
 public class Post {
     private Integer id;
     private String title;
     private String content;
     private int userId;
-
 
     public int getUserId() {
         return userId;
@@ -15,8 +16,8 @@ public class Post {
         this.userId = userId;
     }
 
-    public Post(int id, String title, String content, int userId) {
-        this.id = id;
+    public Post(String title, String content, int userId) {
+        this.id = IdGenerator.generatePostId();
         this.title = title;
         this.content = content;
         this.userId = userId;

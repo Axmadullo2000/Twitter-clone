@@ -11,7 +11,8 @@ public class User extends UserPost {
     private UserRole role;
     private Status status;
 
-    public User(int id, String username, String password, UserRole role, Status status) {
+    public User(int id, String username, String password, UserRole role, Status status, int userId, int postId) {
+        super(userId, postId);
         this.id = id;
         this.username = username;
         this.password = password;
