@@ -6,20 +6,36 @@ import enums.UserRole;
 public class User extends UserPost {
 
     private Integer id;
-    private String username;
+    private String userName;
     private String password;
     private UserRole role;
     private Status status;
+    private int postCounter = 0;
 
-    public User(int id, String username, String password, UserRole role, Status status, int userId, int postId) {
+    public int getPostIdCounter() {
+        return postIdCounter;
+    }
+
+    public int getPostCounter() {
+        return postCounter;
+    }
+
+    private int postIdCounter;
+
+    public int getNextPostId() {
+        return ++postCounter;
+    }
+
+    public User(int id, String userName, String password, UserRole role, Status status, int userId, int postId) {
         super(userId, postId);
         this.id = id;
-        this.username = username;
+        this.userName = userName;
         this.password = password;
         this.role = role;
         this.status = status;
+        this.postIdCounter = 0;
+        this.postCounter = 0;
     }
-
 
     public Integer getId() {
         return id;
@@ -30,11 +46,11 @@ public class User extends UserPost {
     }
 
     public String getUsername() {
-        return username;
+        return userName;
     }
 
     public void setUsername(String username) {
-        this.username = username;
+        this.userName = username;
     }
 
     public String getPassword() {
@@ -64,12 +80,7 @@ public class User extends UserPost {
 
     @Override
     public String toString() {
-        return "User { " +
-                "id = " + id +
-                ", username = '" + username + '\'' +
-                ", password = '" + password + '\'' +
-                ", role = " + role +
-                ", status = " + status +
-                '}';
+        return "User information:\n id: %d, username: %s, password: %s, role: %s, status: %s"
+                .formatted(id, userName, password, role, status);
     }
 }

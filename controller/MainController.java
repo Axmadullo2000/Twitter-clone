@@ -1,19 +1,21 @@
 package controller;
 
+import dto.UserRecord;
+import entity.Comment;
 import entity.Post;
 import entity.User;
 import enums.Status;
 import enums.UserRole;
 import service.MainService;
-import util.Util;
+import static util.Util.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MainController {
 
     private MainService mainService = new MainService();
-
-    Util util = new Util();
 
     public void start() {
 
@@ -23,7 +25,7 @@ public class MainController {
                 1. Sign in
                 2. Sign up
                 0. Exit""");
-                int option = util.getInteger("Choose an option");
+                int option = getInteger("Choose an option");
 
                 switch (option) {
                     case 1 -> {
@@ -48,10 +50,12 @@ public class MainController {
         System.out.println("Create your account here!");
 
         try {
-            String userName = util.getText("Enter your username");
-            String password = util.getText("Enter your password");
+            String userName = getText("Enter your username");
+            String password = getText("Enter your password");
 
-            if (mainService.createAccount(userName, password)) {
+            UserRecord userRecord = new UserRecord(userName, password);
+
+            if (mainService.createAccount(userRecord)) {
                 System.out.println("Your successfully achievements start here!");
 
                 UserPage();
@@ -65,21 +69,23 @@ public class MainController {
         System.out.println("Log in to your account");
 
         try {
-            String userName = util.getText("Enter username");
-            String password = util.getText("Enter password");
+            String userName = getText("Enter username");
+            String password = getText("Enter password");
 
-            String role = mainService.loginToAccount(userName, password);
+            UserRecord userRecord = new UserRecord(userName, password);
+
+            String role = mainService.loginToAccount(userRecord);
 
             if (role != null) {
                 if (role.equals(UserRole.ADMIN.toString())) {
                     AdminPage();
                 }
 
-                if (role.equals(UserRole.USER.toString())) {
+                else if (role.equals(UserRole.USER.toString())) {
                     UserPage();
                 }
             }else {
-                System.out.println("Invalid password or username");
+                System.out.println("User is not registered in our program");
             }
 
         }catch (RuntimeException e) {
@@ -104,7 +110,7 @@ public class MainController {
                     0. Log out
                     """);
 
-            int option = util.getInteger("Choose an option");
+            int option = getInteger("Choose an option");
 
             switch (option) {
                 case 1 -> {
@@ -178,7 +184,7 @@ public class MainController {
                 }
             }
 
-            int userId = util.getInteger("Choose user id");
+            int userId = getInteger("Choose user id");
 
             if (!mainService.checkedUser(userId)) {
                 System.out.println("User not found");
@@ -226,7 +232,7 @@ public class MainController {
                 }
             }
 
-            int userId = util.getInteger("Choose user id");
+            int userId = getInteger("Choose user id");
 
             mainService.activateUser(userId);
         }
@@ -247,7 +253,7 @@ public class MainController {
         System.out.println("Which one user would you like to remove");
         showAllUsers();
 
-        int userId = util.getInteger("Choose user id");
+        int userId = getInteger("Choose user id");
 
         if (!mainService.checkedUser(userId)) {
             System.out.println("User not found");
@@ -260,7 +266,7 @@ public class MainController {
     private void changeAdminPassword() {
         System.out.println("Change Admin Password");
 
-        String currentPass = util.getText("Enter current password");
+        String currentPass = getText("Enter current password");
 
         if (!mainService.checkPassword(currentPass)) {
             System.out.print("""
@@ -271,7 +277,12 @@ public class MainController {
             return;
         }
 
-        String newPassword = util.getText("Enter new password");
+        String newPassword = getText("Enter new password");
+
+        if (newPassword.length() < 8) {
+            System.out.println("Password must be consist more than 8 elements");
+            return;
+        }
 
         mainService.changePassword(currentPass, newPassword);
     }
@@ -289,11 +300,12 @@ public class MainController {
             System.out.print("""
                     1. Create post
                     2. Show posts
-                    3. Change own password
+                    3. Global posts
+                    4. Change own password
                     0. Log out
                     """);
 
-            int option = util.getInteger("Choose an option");
+            int option = getInteger("Choose an option");
 
             switch (option) {
                 case 1 -> {
@@ -301,10 +313,14 @@ public class MainController {
                 }
 
                 case 2 -> {
-                    showPosts();
+                    showMyPosts();
                 }
 
                 case 3 -> {
+                    globalPosts();
+                }
+
+                case 4 -> {
                     changeUserPassword();
                 }
 
@@ -327,8 +343,8 @@ public class MainController {
             return;
         }
 
-        String title = util.getText("Enter title");
-        String content = util.getText("Enter content");
+        String title = getText("Enter title");
+        String content = getText("Enter content");
 
         try {
             ArrayList<Post> data = mainService.createPost(title, content);
@@ -347,7 +363,7 @@ public class MainController {
         }
     }
 
-    private void showPosts() {
+    private void showMyPosts() {
         if (mainService.showPosts().isEmpty()) {
             System.out.println("----------------");
             System.out.println("Nothing to show!");
@@ -357,24 +373,176 @@ public class MainController {
 
         System.out.println("Posts list");
 
-        System.out.println("------------------------------------------");
-
         for (Post post: mainService.showPosts()) {
             System.out.println(post);
+
+            Set<Integer> likedUserIds = post.getPostLike().getLikedUserIds();
+            Set<String> likedUsernames = new HashSet<>();
+
+            for (int userId : likedUserIds) {
+                likedUsernames.add(mainService.getUsernameById(userId));
+            }
+
+            System.out.println("Liked by: " + likedUsernames);
+
+            System.out.println("Comments:");
+
+            for (Comment comment : post.getPostComment().getComments()) {
+                System.out.println(" - " + comment);
+            }
+        }
+
+        int postId = getInteger("Enter post ID to interact with");
+        int currentUserId = mainService.getCurrentUserId();
+
+        if (currentUserId == -1) {
+            System.out.println("Error: No user is logged in!");
+            return;
+        }
+
+        Post selectedPost = mainService.getPostById(postId, currentUserId);
+
+        if (selectedPost == null ) {
+            System.out.println("Post not found for this user!");
+            return;
+        }
+
+        mainService.incrementPostViewsCount(postId);
+
+        System.out.println("""
+            1. Like this post
+            2. Comment on this post
+            3. View likes, comments, and views
+            0. Go back
+        """);
+
+        int postOption = getInteger("Choose an option");
+
+        switch (postOption) {
+            case 1 -> likePost(selectedPost);
+            case 2 -> commentsPost(selectedPost);
+            case 3 -> showPostInteractions(selectedPost);
+        }
+    }
+
+
+    private void globalPosts() {
+        if (mainService.getAllPosts().isEmpty()) {
+            System.out.println("----------------");
+            System.out.println("Nothing to show!");
+            System.out.println("----------------");
+            return;
+        }
+
+        System.out.println("Posts list");
+
+        System.out.println("----------------------------------------");
+
+        ArrayList<Post> allPosts = mainService.getAllPosts();
+
+        if (allPosts == null) {
+            System.out.println("Post not found!");
+            return;
+        }
+
+        for (Post post: mainService.getAllPosts()) {
+            System.out.println(post);
+
+            printPostDetails(post);
+        }
+
+        int postId = getInteger("Choose one post id");
+
+        try {
+            Post selectedPost = mainService.getGlobalPostById(postId);
+
+            mainService.incrementGloballyPostViewsCount(selectedPost.getId());
+
+            System.out.println("""
+                1. Like this post
+                2. Comment on this post
+                3. View likes, comments, and views
+                0. Go back
+            """);
+
+        int postOption = getInteger("Choose an option");
+
+        switch (postOption) {
+            case 1 -> likePost(selectedPost);
+            case 2 -> commentsPost(selectedPost);
+            case 3 -> showPostInteractions(selectedPost);
+        }
+
+        }catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void printPostDetails(Post post) {
+        Set<Integer> likedUserIds = post.getPostLike().getLikedUserIds();
+        Set<String> likedUsernames = new HashSet<>();
+        for (int userId : likedUserIds) {
+            likedUsernames.add(mainService.getUsernameById(userId));
+        }
+
+        System.out.println("Liked by: " + likedUsernames);
+
+        System.out.println("Comments:");
+        for (Comment comment : post.getPostComment().getComments()) {
+            System.out.println(" - " + comment);
+        }
+
+        System.out.println("----------------------------------------");
+    }
+
+    private void likePost(Post post) {
+
+        boolean liked = mainService.addLike(post.getId(), mainService.getCurrentUserId());
+
+        if (liked) {
+            System.out.println("Successfully liked!");
+        } else {
+            Post checkPost = mainService.getGlobalPostById(post.getId());
+            if (checkPost == null) {
+                System.out.println("Error: Post not found!");
+            } else {
+                System.out.println("You have already liked this post!");
+            }
+        }
+    }
+
+    private void commentsPost(Post post) {
+        String comment = getText("Enter your comment");
+        if (mainService.addComment(post.getId(), comment)) {
+            System.out.println("Comment added!");
+        }else {
+            System.out.println("Post with ID " + post.getId() + " not found!");
+        }
+
+    }
+
+    private void showPostInteractions(Post post) {
+        System.out.println("Likes: " + post.getPostLike().getLikesCount());
+        System.out.println("Comments: " + post.getPostComment().getCommentsCount());
+        System.out.println("Views: " + post.getViewsCount());
+
+        System.out.println("Comment list: ");
+        for (Comment comment : post.getPostComment().getComments()) {
+            System.out.println(comment);
         }
     }
 
     private void changeUserPassword() {
         System.out.println("Change User Password");
 
-        String currentPass = util.getText("Enter current password");
+        String currentPass = getText("Enter current password");
 
         if (!mainService.checkPassword(currentPass)) {
             System.out.println("❌ Enter current password!");
             return;
         }
 
-        String newPassword = util.getText("Enter new password");
+        String newPassword = getText("Enter new password");
 
         mainService.changePassword(currentPass, newPassword);
     }

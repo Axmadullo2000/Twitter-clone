@@ -1,14 +1,13 @@
 package util;
 
-import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Util {
 
-    Scanner intScanner = new Scanner(System.in);
-    Scanner strScanner = new Scanner(System.in);
+    static Scanner intScanner = new Scanner(System.in);
+    static Scanner strScanner = new Scanner(System.in);
 
-    public int getInteger(String text) {
+    public static int getInteger(String text) {
         while (true) {
             System.out.printf("%s: ", text);
             String input = intScanner.nextLine();
@@ -21,7 +20,7 @@ public class Util {
         }
     }
 
-    public String getText(String text) {
+    public static String getText(String text) {
         System.out.printf("%s: ", text);
         return strScanner.nextLine();
     }

@@ -1,5 +1,6 @@
 package service;
 
+import dto.UserRecord;
 import entity.Post;
 import entity.User;
 import enums.Status;
@@ -12,21 +13,16 @@ import java.util.ArrayList;
 public class MainService {
     private DataBase dataBase = new DataBase();
 
-    public boolean createAccount(String userName, String password) {
+    public boolean createAccount(UserRecord userRecord) {
 
         for (User user: dataBase.getUserList()) {
-            if (userName.length() < 5 || password.length() < 8 ) {
-                throw new RuntimeException("❌ Username length must be more than 5, password length at least 8");
-            }
-
-            if (user.getUsername().equals(userName) ) {
+            if (user.getUsername().equals(userRecord.userName()) ) {
                 throw new RuntimeException("This username already exists!");
             }
         }
 
         int newUserId = IdGenerator.generateUserId();
-        int newPostId = IdGenerator.generateUserId();
-        User newUser = new User(newUserId, userName, password, UserRole.USER, Status.ACTIVE, newUserId, newPostId);
+        User newUser = new User(newUserId, userRecord.userName(), userRecord.password(), UserRole.USER, Status.ACTIVE, newUserId, 0);
 
         dataBase.getUserList().add(newUser);
         dataBase.setCurrentUser(newUser);
@@ -34,15 +30,9 @@ public class MainService {
         return true;
     }
 
-    public String loginToAccount(String userName, String password) {
+    public String loginToAccount(UserRecord userRecord) {
         for (User user: dataBase.getUserList()) {
-            if (!user.getUsername().equals("admin") && !user.getPassword().equals("admin")) {
-                if (userName.length() < 5 || password.length() < 8) {
-                    throw new RuntimeException("❌ Username length must be more than 5, password length at least 8");
-                }
-            }
-
-            if (user.getUsername().equals(userName) && user.getPassword().equals(password)) {
+            if (user.getUsername().equals(userRecord.userName()) && user.getPassword().equals(userRecord.password())) {
                 dataBase.setCurrentUser(user);
                 return user.getRole().toString();
             }
@@ -107,9 +97,6 @@ public class MainService {
 
     public void changePassword(String currentPassword, String newPassword) {
         for (User user: dataBase.getUserList()) {
-            if (newPassword.length() < 8) {
-                throw new RuntimeException("Password must be consist more than 8 elements");
-            }
             if (user.getPassword().equals(currentPassword)) {
                 user.setPassword(newPassword);
                 return;
@@ -133,18 +120,23 @@ public class MainService {
             throw new RuntimeException("❌ Your account is blocked. Can not create a post.");
         }
 
-        Post post = new Post(title, content, dataBase.getCurrentUser().getId());
+        Post post = new Post(IdGenerator.generatePostId(), title, content, currentUser.getId());
         dataBase.getPostList().add(post);
 
         ArrayList<Post> userPosts = new ArrayList<>();
 
-        for (Post p: dataBase.getPostList()) {
-            if (p.getUserId() == currentUser.getId() ) {
+        for (Post p : dataBase.getPostList()) {
+            if (p.getUserId() == currentUser.getId()) {
                 userPosts.add(p);
             }
         }
 
         return userPosts;
+    }
+
+    public ArrayList<Post> getAllPosts() {
+        // todo
+        return dataBase.getPostList();
     }
 
     public ArrayList<Post> showPosts() {
@@ -160,4 +152,78 @@ public class MainService {
 
         return userPosts;
     }
+
+    public boolean addLike(int postId, int likerUserId) {
+        Post post = getGlobalPostById(postId);
+
+        if (post == null || post.getPostLike().isLikedByUser(likerUserId) ) {
+            return false;
+        }
+
+        post.getPostLike().addLike(likerUserId);
+
+        return true;
+    }
+
+    public boolean addComment(int commentId, String comment) {
+        Post post = getGlobalPostById(commentId);
+
+        if (post != null) {
+            String commentator = getUsernameById(getCurrentUserId());
+            post.getPostComment().addComment(comment, commentator);
+            return true;
+        }
+
+        return false;
+    }
+
+    public void incrementPostViewsCount(int postId) {
+        Post post = getGlobalPostById(postId);
+
+        if (post != null) {
+            post.incrementViews();
+        }
+    }
+
+    public void incrementGloballyPostViewsCount(int postId) {
+        Post post = getGlobalPostById(postId);
+
+        if (post != null) {
+            post.incrementViews();
+        }
+    }
+
+    public Post getPostById(int postId, int currentUserId) {
+        for (Post post : dataBase.getPostList()) {
+            if (post.getId() == postId && post.getUserId() == currentUserId ) {
+                return post;
+            }
+        }
+
+        return null;
+    }
+
+    public Post getGlobalPostById(int postId) {
+        for (Post post : dataBase.getPostList()) {
+            if (post.getId() == postId ) {
+                return post;
+            }
+        }
+
+        return null;
+    }
+
+    public int getCurrentUserId() {
+        User currentUser = dataBase.getCurrentUser();
+
+        if (currentUser == null) return -1;
+
+        return currentUser.getId();
+    }
+
+    public String getUsernameById(int userId) {
+        User user = dataBase.getUserById(userId);
+        return user != null ? user.getUsername() : "Unknown";
+    }
+
 }

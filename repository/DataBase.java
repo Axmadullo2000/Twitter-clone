@@ -23,6 +23,16 @@ public class DataBase {
         return userList;
     }
 
+    public User getUserById(int id) {
+        for (User user : userList) {
+            if (user.getId() == id) {
+                return user;
+            }
+        }
+
+        return null;
+    }
+
     public ArrayList<Post> getPostList() {
         return postList;
     }
@@ -36,7 +46,7 @@ public class DataBase {
     }
 
     {
-        User admin = new User(0,"admin", "admin", UserRole.ADMIN, Status.ACTIVE, 0, 0 );
+        User admin = new User(0,"admin65419", "12345678", UserRole.ADMIN, Status.ACTIVE, 0, 0 );
         userList.add(admin);
     }
 

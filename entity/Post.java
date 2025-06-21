@@ -3,10 +3,14 @@ package entity;
 import util.IdGenerator;
 
 public class Post {
-    private Integer id;
+    private int id;
     private String title;
-    private String content;
+    private String comment;
     private int userId;
+
+    private PostLike postLike;
+    private PostComment postComment;
+    private int viewsCount;
 
     public int getUserId() {
         return userId;
@@ -16,14 +20,21 @@ public class Post {
         this.userId = userId;
     }
 
-    public Post(String title, String content, int userId) {
-        this.id = IdGenerator.generatePostId();
+    public Post(int id, String title, String comment, int userId) {
+        this.id = id;
         this.title = title;
-        this.content = content;
+        this.comment = comment;
         this.userId = userId;
+
+        this.postLike = new PostLike();
+        this.postComment = new PostComment();
+        this.viewsCount = 0;
     }
 
     public Post() {
+        this.postLike = new PostLike();
+        this.postComment = new PostComment();
+        this.viewsCount = 0;
     }
 
     public Integer getId() {
@@ -43,20 +54,44 @@ public class Post {
     }
 
     public String getContent() {
-        return content;
+        return comment;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setContent(String comment) {
+        this.comment = Post.this.comment;
+    }
+
+    public PostLike getPostLike() {
+        return postLike;
+    }
+
+    public PostComment getPostComment() {
+        return postComment;
+    }
+
+    public int getViewsCount() {
+        return viewsCount;
+    }
+
+    public void incrementViews() {
+        this.viewsCount++;
     }
 
     @Override
     public String toString() {
-        return "Post{" +
-                "id=" + id +
-                ", title='" + title + '\'' +
-                ", content='" + content + '\'' +
-                '}';
+        return """
+        Post Details:
+        ----------------------------------------
+        ID: %d
+        Title: %s
+        Content: %s
+        User ID: %d
+        Views: %d""".formatted(
+            id,
+            title,
+            comment,
+            userId,
+            viewsCount
+        );
     }
-
 }
